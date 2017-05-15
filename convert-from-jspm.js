@@ -36,11 +36,11 @@ const packageJson = require(packageJsonPath);
 packageJson.dependencies = packageJson.dependencies || {};
 packageJson.devDependencies = packageJson.devDependencies || {};
 
-const jspmConfigPath = path.resolve(`${options.path}/${packageJson.jspm.configFile}`);
-if (!fs.existsSync(jspmConfigPath)) {
-  console.error(`Could not find jspm config at ${jspmConfigPath}`);
-  process.exit(-1);
-}
+// const jspmConfigPath = path.resolve(`${options.path}/${packageJson.jspm.configFile}`);
+// if (!fs.existsSync(jspmConfigPath)) {
+//   console.error(`Could not find jspm config at ${jspmConfigPath}`);
+//   process.exit(-1);
+// }
 
 // let jspmConfig;
 // // Declare a global System object that jspm can use to load into, so we can capture it's config
@@ -85,7 +85,11 @@ packageJson.devDependencies = Object.assign(packageJson.devDependencies, process
 
 if (Object.keys(packageJson.jspm.dependencies).length == 0 && Object.keys(packageJson.jspm.devDependencies).length == 0) {
   delete packageJson.jspm;
-  console.log(JSON.stringify(packageJson, null, '\t'));
+
+  fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, '\t'), (err) => {
+    if (err) throw err;
+  });
+  // console.log(JSON.stringify(packageJson, null, '\t'));
 } else {
   console.warn('There are remaining dependencies to be migrated. Please fix these manually and remove the jspm section from your package.js');
 }
