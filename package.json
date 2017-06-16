@@ -4,7 +4,7 @@
   "description": "Converts a project from jspm to npm + webpack",
   "main": "convert-from-jspm.js",
   "dependencies": {
-    "command-line-args": "^4.0.2"
+    "command-line-args": "^4.0.6"
   },
   "devDependencies": {},
   "scripts": {
