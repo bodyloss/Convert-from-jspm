@@ -18,7 +18,7 @@ if (!options.path) {
 }
 
 let prefixes = {
-  'npm': (p) => p,
+  'npm': (p) => p.replace(/.*@([0-9.])/, '$1'),
   'github': (p) => p
 };
 if (options.prefixes && fs.existsSync(options.prefixes)) {
@@ -35,22 +35,6 @@ if (!fs.existsSync(packageJsonPath)) {
 const packageJson = require(packageJsonPath);
 packageJson.dependencies = packageJson.dependencies || {};
 packageJson.devDependencies = packageJson.devDependencies || {};
-
-// const jspmConfigPath = path.resolve(`${options.path}/${packageJson.jspm.configFile}`);
-// if (!fs.existsSync(jspmConfigPath)) {
-//   console.error(`Could not find jspm config at ${jspmConfigPath}`);
-//   process.exit(-1);
-// }
-
-// let jspmConfig;
-// // Declare a global System object that jspm can use to load into, so we can capture it's config
-// System = {
-//   config: (conf) => {
-//     jspmConfig = conf;
-//   }
-// }
-// require(jspmConfigPath);
-
 
 if (packageJson.dependencies.jspm) {
   delete packageJson.dependencies.jspm;
@@ -70,8 +54,12 @@ function processDependencies(jspmDeps) {
     let value = jspmDeps[label];
     let prefix = value.substr(0, value.indexOf(':'));
 
-    if (prefixes[prefix]) {
-      packageDeps[label] = prefixes[prefix](jspmDeps[label].replace(/(npm|github):/, ''));
+    if (jspmDeps[label].indexOf('github:systemjs/') !== -1) {
+      console.log(`Skipping ${label} as it is a jspm plugin`);
+      delete jspmDeps[label];
+    } else if (prefixes[prefix]) {
+      const convertedLabel = label.replace(/^.+\//, '');
+      packageDeps[convertedLabel] = prefixes[prefix](jspmDeps[label].replace(/(npm|github):/, ''));
       delete jspmDeps[label];
     } else {
       console.log(`Couldn't remove jspm dependency ${label}:${jspmDeps[label]} as don't know how to process it`);
@@ -89,7 +77,6 @@ if (Object.keys(packageJson.jspm.dependencies).length == 0 && Object.keys(packag
   fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, '\t'), (err) => {
     if (err) throw err;
   });
-  // console.log(JSON.stringify(packageJson, null, '\t'));
 } else {
   console.warn('There are remaining dependencies to be migrated. Please fix these manually and remove the jspm section from your package.js');
 }
